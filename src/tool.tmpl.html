@@ -1,0 +1,399 @@
+<title>Demand Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/js/jsvectormap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
+<style>
+/* Layout: left control rail + right output stack; collapses to one column under 900px */
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --fg:#141a1f; --muted:#5d6872; --line:#dde3e9;
+  --accent:#c2185b; --accent-soft:#fbe4ed; --warn:#8a5a00; --warn-soft:#fdf3dd;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"IBM Plex Sans KR","IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1317; --panel:#161c22; --fg:#e7edf2; --muted:#93a0ab; --line:#28313a;
+  --accent:#ff5c93; --accent-soft:#3a1527; --warn:#e0b265; --warn-soft:#2e2412; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1317; --panel:#161c22; --fg:#e7edf2; --muted:#93a0ab; --line:#28313a;
+  --accent:#ff5c93; --accent-soft:#3a1527; --warn:#e0b265; --warn-soft:#2e2412; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.6;word-break:keep-all}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+h1{font-size:clamp(22px,3.4vw,30px);font-weight:700;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 4px;max-width:62ch}
+.eyebrow{font-size:13px;font-weight:600;color:var(--accent);margin:0 0 8px;letter-spacing:-.01em}
+.prov{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.01em;margin-top:10px}
+.prov a{color:var(--muted)}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:26px;margin-top:26px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px}
+.rail{display:flex;flex-direction:column;gap:18px;position:sticky;top:12px}
+@media (max-width:900px){.rail{position:static}}
+.lab{display:block;font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+select,input[type=number]{width:100%;font-family:var(--sans);font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--fg)}
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.wrow{display:grid;grid-template-columns:1fr 64px;gap:8px;align-items:center;margin-bottom:6px;font-size:13.5px}
+.wrow input{padding:5px 7px;font-size:13px;text-align:right}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--muted);margin-top:4px}
+.chk input{margin-top:5px;flex:none}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.btn{font-family:var(--sans);font-size:13px;padding:7px 12px;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:3px;cursor:pointer}
+.btn:hover{color:var(--fg);border-color:var(--muted)}
+section{margin-bottom:26px}
+h2{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.hero{display:flex;flex-wrap:wrap;gap:22px;align-items:baseline;margin-bottom:16px}
+.big{font-family:var(--mono);font-size:clamp(28px,5vw,40px);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.bigcap{font-size:12px;color:var(--muted);margin-top:4px}
+.regbar{display:flex;height:34px;border-radius:3px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px}
+.regbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap}
+.reglegend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:18px}
+.reglegend span{display:flex;align-items:center;gap:5px}
+.dot{width:9px;height:9px;border-radius:2px;flex:none}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:9px 11px;background:var(--bg);border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+td{padding:8px 11px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.cc{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-transform:uppercase}
+.qty{font-weight:600}
+.bar{position:relative;min-width:110px}
+.bar i{display:block;height:7px;background:var(--accent);border-radius:1px}
+.pen{display:grid;grid-template-columns:110px minmax(0,1fr) 62px;gap:9px;align-items:center;font-size:13px;margin-bottom:5px}
+.pen b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pen i{display:block;height:11px;background:var(--accent);border-radius:1px;min-width:1px}
+.pen span{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.ev{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-end}
+.ev div p{margin:0}
+.evn{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.evc{font-size:12px;color:var(--muted);margin-top:5px}
+.arrow{font-family:var(--mono);font-size:20px;color:var(--accent);padding-bottom:8px}
+.warn{background:var(--warn-soft);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:3px;padding:14px 16px;font-size:13.5px}
+.warn h3{margin:0 0 9px;font-size:13px;font-weight:700;color:var(--warn);letter-spacing:.02em}
+.warn ul{margin:0;padding-left:17px}
+.warn li{margin-bottom:7px}
+.warn li:last-child{margin-bottom:0}
+.warn b{font-weight:600}
+.inline-warn{background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 3px 3px 0;padding:10px 13px;font-size:12.5px;line-height:1.55;color:var(--fg);margin:0 0 12px}
+.inline-warn b{font-weight:600;color:var(--warn)}
+.badge{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.02em;padding:2px 6px;border-radius:2px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+.ok{font-size:11.5px;color:var(--muted)}
+#map{width:100%;height:clamp(260px,42vw,440px);border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+#map svg{max-width:100%}
+.jvm-container{width:100%;height:100%;position:relative;overflow:hidden;touch-action:none}
+.jvm-tooltip{position:absolute;display:none;border-radius:3px;background:var(--fg);color:var(--bg);font-family:var(--sans);font-size:12px;padding:4px 8px;white-space:nowrap;pointer-events:none;z-index:9}
+.jvm-tooltip.active{display:block}
+.jvm-zoom-btn{position:absolute;left:8px;border-radius:2px;background:var(--fg);color:var(--bg);width:18px;height:18px;line-height:18px;text-align:center;cursor:pointer;opacity:.6;font-family:var(--mono);font-size:13px;user-select:none}
+.jvm-zoomin{top:8px}.jvm-zoomout{top:30px}
+.scale{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.ramp{height:9px;width:150px;border-radius:2px;border:1px solid var(--line)}
+.mapfail{padding:22px;text-align:center;color:var(--muted);font-size:13px}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <h1>Demand Atlas</h1>
+  <p class="eyebrow">차트에서 장바구니까지 — K-pop 굿즈 글로벌 물량 배분 도구</p>
+  <p class="sub">아티스트와 총 발주 수량을 넣으면, 71개국 차트 데이터로 계산한 시장별 침투도에 굿즈 실거래 권역 비중을 곱해 배분안을 냅니다. 총 수량은 사용자가 정하고 도구는 나누기만 합니다.</p>
+  <p class="prov">원천 2,514만 행 → 팩트 61만 4,789행 · 71개국 · 2021-10-21 ~ 2026-11-05 · 출처 <a href="https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated" target="_blank" rel="noopener">Kaggle spotify-charts-daily-updated</a> (CC BY-SA 4.0)</p>
+
+  <div class="grid">
+    <div class="rail">
+      <div class="panel">
+        <label class="lab" for="artist">아티스트</label>
+        <select id="artist"></select>
+        <div class="note" id="ameta"></div>
+      </div>
+      <div class="panel">
+        <label class="lab" for="total">총 발주 수량</label>
+        <input type="number" id="total" value="10000" min="1" step="100">
+        <div class="note">도구가 정하지 않습니다. 굿즈 판매 데이터가 공개된 적이 없어 절대 수량을 낼 근거가 없습니다.</div>
+      </div>
+      <div class="panel">
+        <label class="lab" for="members">멤버 수</label>
+        <input type="number" id="members" value="7" min="1" max="30" step="1">
+        <div class="note">포토카드·아크릴처럼 멤버별로 갈리는 품목의 종류 수를 정합니다. 기본값은 수동 입력한 값이라 틀렸으면 고치세요.</div>
+      </div>
+      <div class="panel">
+        <span class="lab">권역 가중치 (%)</span>
+        <div id="weights"></div>
+        <button class="btn" id="reset" type="button">기본값으로</button>
+        <div class="note">기본값은 번개장터 2025 글로벌 리포트의 K-pop 굿즈 실거래 지역 비중입니다. 외부 입력이며 직접 고칠 수 있습니다.</div>
+      </div>
+      <div class="panel">
+        <span class="lab">옵션</span>
+        <label class="chk"><input type="checkbox" id="inckr"> 국내(KR) 포함</label>
+        <div class="note">Spotify는 국내 점유율이 낮아 한국 팬덤을 크게 과소 대표합니다. 기본값은 제외이고, 국내 물량은 따로 잡는 것을 권합니다.</div>
+      </div>
+    </div>
+
+    <div>
+      <section>
+        <h2>배분안</h2>
+        <div class="hero">
+          <div><div class="big" id="htotal">—</div><div class="bigcap">총 배분 수량</div></div>
+          <div><div class="big" id="hauto">—</div><div class="bigcap">자동 배분</div></div>
+          <div><div class="big" id="hman">—</div><div class="bigcap">수동 배분 필요</div></div>
+          <div><div class="big" id="htop">—</div><div class="bigcap">최대 권역</div></div>
+        </div>
+        <div class="regbar" id="regbar"></div>
+        <div class="reglegend" id="reglegend"></div>
+        <div class="scroll"><table>
+          <thead><tr><th>권역</th><th class="num">가중치</th><th class="num">배분 수량</th><th class="num">비중</th><th class="num">진입 국가</th><th class="num">구간 표본</th><th>상태</th></tr></thead>
+          <tbody id="regrows"></tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>권역 내 국가별 참고 분배 <button class="btn" id="copy" type="button" style="float:right;margin-top:-5px">표 복사</button></h2>
+        <p class="inline-warn"><b>확정값이 아닙니다.</b> 국가별 수량은 침투도만으로 나눈 참고값입니다. 권역 안에서 시장 규모를 재는 데이터가 없어 큰 시장이 과소평가됩니다. BTS 북미에서 캐나다가 미국보다 높게 나오는 것이 그 예입니다. 표본이 30행에 못 미치는 권역은 자동 분배를 하지 않고 <b>수동</b>으로 표시합니다.</p>
+        <div class="scroll"><table>
+          <thead><tr><th>국가</th><th>권역</th><th class="num">참고 분배</th><th class="num">비중</th><th>침투도</th><th class="num">차트 체류일</th><th class="num">평균 순위</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>배분 지도</h2>
+        <div id="map"></div>
+        <div class="scale"><span>배분 비중</span><span class="ramp" id="ramp"></span><span id="ramphi">—</span><span id="mapnote"></span></div>
+      </section>
+
+      <section>
+        <h2>멤버별 SKU 환산</h2>
+        <p class="note" style="margin:0 0 14px">포토카드·아크릴 스탠드처럼 멤버별로 종류가 갈리는 품목은 배분 수량을 멤버 수로 나눠야 1종당 발주량이 나옵니다. 응원봉·슬로건 같은 공통 품목은 권역 수량 그대로입니다.</p>
+        <div class="scroll"><table>
+          <thead><tr><th>권역</th><th class="num">배분 수량</th><th class="num">멤버별 1종당</th><th class="num">공통 1종</th></tr></thead>
+          <tbody id="skurows"></tbody>
+        </table></div>
+        <p class="note" id="skunote"></p>
+      </section>
+
+      <section>
+        <h2>시장 침투도 — 가중치 적용 전</h2>
+        <p class="note" style="margin:0 0 14px">차트 데이터만으로 계산한 값입니다. 해당 국가 차트에서 이 아티스트가 차지한 비중이며, <b>시장 규모가 아닙니다.</b></p>
+        <div id="pen"></div>
+      </section>
+
+      <section>
+        <h2>컴백 전후 반응</h2>
+        <div class="ev">
+          <div><p class="evn" id="evpre">—</p><p class="evc">컴백 전 30일<br>진입 국가</p></div>
+          <div class="arrow">→</div>
+          <div><p class="evn" id="evpost">—</p><p class="evc">컴백 후 30일<br>진입 국가</p></div>
+          <div><p class="evn" id="evmul">—</p><p class="evc">확산 배수</p></div>
+        </div>
+        <p class="note" id="evnote"></p>
+      </section>
+
+      <section>
+        <div class="warn">
+          <h3>이 도구가 틀리는 지점</h3>
+          <ul>
+            <li><b>침투도는 시장 규모가 아닙니다.</b> 차트는 나라마다 200칸으로 똑같이 잘려 있어, K-pop 비중이 높은 작은 시장이 과대평가됩니다. 검증 중 ATEEZ의 유럽 침투도에서 독일이 꼴찌(0.08%)로 나왔지만, 번개장터 실거래에서 독일은 ATEEZ의 1위 시장입니다. 권역 가중치를 따로 곱하는 이유입니다.</li>
+            <li><b>Top 200 밖은 데이터가 없습니다.</b> 차트에 못 드는 아티스트는 행 자체가 없어 분석이 안 됩니다. 피크 15개국 이상인 24팀만 대상입니다.</li>
+            <li><b>권역 표본이 얇으면 자동 배분을 멈춥니다.</b> 차트 진입이 없다고 팬덤이 없는 것은 아닙니다. 해당 권역 표본이 30행 미만이면 수량만 내고 국가 분배는 담당자에게 넘깁니다. 한 나라 한 줄로 권역의 절반을 배분하는 일을 막기 위해서입니다.</li>
+            <li><b>스트리밍은 굿즈 구매가 아닙니다.</b> 스트리밍은 라이트 리스너를 포함하고 굿즈는 코어 팬 행동입니다. 상관은 있어도 등가가 아닙니다.</li>
+            <li><b>절대 수량은 산출하지 않습니다.</b> 굿즈 판매 데이터가 공개된 적이 없습니다. 총 수량은 입력값이고 도구는 비율만 계산합니다.</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer id="foot"></footer>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/;
+const CN = {us:"미국",ca:"캐나다",gb:"영국",de:"독일",fr:"프랑스",it:"이탈리아",es:"스페인",nl:"네덜란드",be:"벨기에",at:"오스트리아",ch:"스위스",se:"스웨덴",no:"노르웨이",dk:"덴마크",fi:"핀란드",is:"아이슬란드",ie:"아일랜드",pl:"폴란드",cz:"체코",sk:"슬로바키아",hu:"헝가리",ro:"루마니아",bg:"불가리아",gr:"그리스",pt:"포르투갈",ee:"에스토니아",lv:"라트비아",lt:"리투아니아",lu:"룩셈부르크",cy:"키프로스",ua:"우크라이나",tr:"튀르키예",jp:"일본",kr:"한국",hk:"홍콩",tw:"대만",sg:"싱가포르",my:"말레이시아",th:"태국",id:"인도네시아",ph:"필리핀",vn:"베트남",in:"인도",pk:"파키스탄",kz:"카자흐스탄",au:"호주",nz:"뉴질랜드",mx:"멕시코",br:"브라질",ar:"아르헨티나",cl:"칠레",co:"콜롬비아",pe:"페루",ve:"베네수엘라",ec:"에콰도르",bo:"볼리비아",py:"파라과이",uy:"우루과이",cr:"코스타리카",pa:"파나마",gt:"과테말라",hn:"온두라스",sv:"엘살바도르",do:"도미니카공화국",ni:"니카라과",ng:"나이지리아",za:"남아공",eg:"이집트",ma:"모로코",ae:"UAE",sa:"사우디",il:"이스라엘"};
+const DEF = {"북미":51.7,"유럽":19.4,"아시아":19.1,"오세아니아":3.4,"남미":3.4,"아프리카":0.1,"중동·기타":2.9};
+const RC = {"북미":"#c2185b","유럽":"#1565a0","아시아":"#2e7d53","오세아니아":"#7b4fa8","남미":"#c76a12","아프리카":"#4a5c68","중동·기타":"#96632a"};
+// 멤버 수 — 공개 데이터에 없어 수동 입력. 화면에서 고칠 수 있다.
+const MEMBERS = {"BTS":7,"BLACKPINK":4,"Jung Kook":1,"Stray Kids":8,"RM":1,"j-hope":1,"Agust D":1,"Jimin":1,
+"TOMORROW X TOGETHER":5,"NewJeans":5,"ENHYPEN":7,"TWICE":9,"Jin":1,"LE SSERAFIM":5,"ILLIT":5,"aespa":4,
+"TAEYANG":1,"FIFTY FIFTY":5,"i-dle":5,"ATEEZ":8,"PSY":1,"SEVENTEEN":13,"IVE":6,"EXO":9};
+const REG = DATA.region, A = DATA.artists;
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString("ko-KR");
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let MAP = null, mapDead = false, TSV = "";
+
+const list = Object.entries(A).sort((a,b)=>b[1].peak-a[1].peak);
+$("artist").innerHTML = list.map(([u,a])=>`<option value="${u}">${a.name} · ${a.peak}개국</option>`).join("");
+
+$("weights").innerHTML = Object.keys(DEF).map(r=>
+  `<div class="wrow"><label for="w_${r}">${r}</label><input type="number" id="w_${r}" data-r="${r}" value="${DEF[r]}" min="0" step="0.1"></div>`).join("");
+
+function weights(){
+  const w = {};
+  Object.keys(DEF).forEach(r=>{ const v = parseFloat($("w_"+r).value); w[r] = isNaN(v)||v<0 ? 0 : v; });
+  return w;
+}
+
+function render(){
+  const a = A[$("artist").value];
+  const total = Math.max(0, parseInt($("total").value)||0);
+  const incKR = $("inckr").checked;
+  const W = weights();
+
+  $("ameta").textContent = `${a.label} · 피크 ${a.peak}개국 (${a.peak_date}) · 분석 구간 ${a.win[0]} ~ ${a.win[1]} · 구간 내 ${fmt(a.win_rows)}행`;
+
+  // group by region, drop KR when excluded
+  const byReg = {};
+  Object.entries(a.c).forEach(([c,v])=>{
+    if(!incKR && c==="kr") return;
+    const r = REG[c] || "중동·기타";
+    (byReg[r] = byReg[r] || []).push({c, pen:v[0], days:v[1], rank:v[2]});
+  });
+  // redistribute weight of regions with no presence
+  let live = 0, dead = 0;
+  Object.keys(DEF).forEach(r => { if(byReg[r] && byReg[r].length) live += W[r]; else dead += W[r]; });
+  const scale = live > 0 ? (live + dead) / live : 0;
+
+  const out = [];
+  Object.entries(byReg).forEach(([r, arr])=>{
+    const sum = arr.reduce((s,x)=>s+x.pen, 0) || 1;
+    const rw = (W[r]||0) * scale;
+    arr.forEach(x => out.push({...x, reg:r, share: rw * x.pen / sum}));
+  });
+  const tot = out.reduce((s,x)=>s+x.share,0) || 1;
+  out.forEach(x => x.share = x.share/tot*100);
+  out.sort((p,q)=>q.share-p.share);
+
+  // integer allocation, largest remainder
+  const raw = out.map(x => x.share/100*total);
+  const base = raw.map(Math.floor);
+  let rest = total - base.reduce((s,n)=>s+n,0);
+  raw.map((v,i)=>[v-base[i],i]).sort((p,q)=>q[0]-p[0]).forEach(([,i])=>{ if(rest>0){ base[i]++; rest--; } });
+  out.forEach((x,i)=> x.qty = base[i]);
+
+  // sample guard: judge on the evidence the split actually uses (chart days inside the window),
+  // not on all-time rows — an artist can have years of history in a region yet almost nothing in this window.
+  const GUARD = DATA.guard || 30;
+  const winDays = {};
+  out.forEach(x => winDays[x.reg] = (winDays[x.reg]||0) + x.days);
+  Object.keys(DEF).forEach(r => { if(!(r in winDays)) winDays[r] = 0; });
+  out.forEach(x => x.guard = winDays[x.reg] < GUARD);
+
+  $("htotal").textContent = fmt(base.reduce((s,n)=>s+n,0));
+  $("hauto").textContent = fmt(out.filter(x=>!x.guard).reduce((s,x)=>s+x.qty,0));
+  $("hman").textContent = fmt(out.filter(x=>x.guard).reduce((s,x)=>s+x.qty,0));
+
+  // region bar
+  const regSum = {};
+  out.forEach(x => regSum[x.reg] = (regSum[x.reg]||0) + x.share);
+  const order = Object.entries(regSum).sort((p,q)=>q[1]-p[1]);
+  $("htop").textContent = order.length ? order[0][0] : "—";
+  $("regbar").innerHTML = order.map(([r,v])=>
+    `<div style="width:${v}%;background:${RC[r]}" title="${r} ${v.toFixed(1)}%">${v>7?r:""}</div>`).join("");
+  $("reglegend").innerHTML = order.map(([r,v])=>
+    `<span><i class="dot" style="background:${RC[r]}"></i>${r} ${v.toFixed(1)}% · ${fmt(out.filter(x=>x.reg===r).reduce((s,x)=>s+x.qty,0))}개</span>`).join("");
+  $("regrows").innerHTML = order.map(([r,v])=>{
+    const inReg = out.filter(x=>x.reg===r);
+    const wd = winDays[r]||0, g = wd < GUARD;
+    return `<tr><td style="color:${RC[r]};font-weight:600">${r}</td><td class="num">${(W[r]||0).toFixed(1)}%</td>
+      <td class="num qty">${fmt(inReg.reduce((s,x)=>s+x.qty,0))}</td><td class="num">${v.toFixed(1)}%</td>
+      <td class="num">${inReg.length}</td><td class="num">${fmt(wd)}일</td>
+      <td>${g?'<span class="badge">표본 부족 · 수동</span>':'<span class="ok">자동 분배</span>'}</td></tr>`;}).join("");
+
+  const mx = out.length ? out[0].pen : 1;
+  $("rows").innerHTML = out.map(x=>`<tr>
+    <td>${CN[x.c]||x.c} <span class="cc">${x.c}</span></td>
+    <td style="color:${RC[x.reg]}">${x.reg}</td>
+    <td class="num qty">${x.guard?'<span class="badge">수동</span>':fmt(x.qty)}</td>
+    <td class="num">${x.guard?'—':x.share.toFixed(2)+'%'}</td>
+    <td class="bar"><i style="width:${Math.max(2,x.pen/mx*100)}%"></i></td>
+    <td class="num">${x.days}</td>
+    <td class="num">${x.rank}</td></tr>`).join("");
+
+  // choropleth map
+  drawMap(out);
+
+  // member SKU conversion
+  const mem = Math.max(1, parseInt($("members").value) || 1);
+  $("skurows").innerHTML = order.map(([r])=>{
+    const q = out.filter(x=>x.reg===r).reduce((s,x)=>s+x.qty,0);
+    return `<tr><td style="color:${RC[r]};font-weight:600">${r}</td><td class="num qty">${fmt(q)}</td>
+      <td class="num">${fmt(Math.floor(q/mem))}</td><td class="num">${fmt(q)}</td></tr>`;}).join("");
+  const grand = base.reduce((s,n)=>s+n,0);
+  $("skunote").textContent = `멤버 ${mem}명 기준. 총 ${fmt(grand)}개를 멤버별 품목으로 만들면 1종당 ${fmt(Math.floor(grand/mem))}개입니다. 멤버 수는 공개 데이터에 없어 수동으로 넣은 값이니 틀렸으면 왼쪽에서 고치세요.`;
+
+  // clipboard payload (artifacts block file downloads, so copy is the way out)
+  TSV = ["권역\t가중치(%)\t배분수량\t비중(%)\t진입국가\t구간표본(일)\t상태"]
+    .concat(order.map(([r,v])=>{
+      const q = out.filter(x=>x.reg===r).reduce((s,x)=>s+x.qty,0);
+      return `${r}\t${(W[r]||0).toFixed(1)}\t${q}\t${v.toFixed(1)}\t${out.filter(x=>x.reg===r).length}\t${winDays[r]||0}\t${(winDays[r]||0)<GUARD?"표본부족·수동":"자동분배"}`;}))
+    .concat(["", "국가\t권역\t참고분배\t비중(%)\t침투도(%)\t차트체류일\t평균순위"])
+    .concat(out.map(x=>`${CN[x.c]||x.c}\t${x.reg}\t${x.guard?"수동":x.qty}\t${x.guard?"":x.share.toFixed(2)}\t${x.pen.toFixed(3)}\t${x.days}\t${x.rank}`))
+    .join("\n");
+
+  // penetration (unweighted) — follows the same KR setting as the allocation
+  const pen = Object.entries(a.c).filter(([c])=>incKR||c!=="kr")
+    .map(([c,v])=>({c,v:v[0]})).sort((p,q)=>q.v-p.v).slice(0,15);
+  const pm = pen.length ? pen[0].v : 1;
+  $("pen").innerHTML = pen.map(x=>`<div class="pen"><b>${CN[x.c]||x.c}</b><i style="width:${Math.max(1,x.v/pm*100)}%"></i><span>${x.v.toFixed(2)}%</span></div>`).join("");
+
+  // event response
+  $("evpre").textContent = a.pre_c;
+  $("evpost").textContent = a.post_c;
+  const mul = a.pre_c > 0 ? (a.post_c/a.pre_c) : null;
+  $("evmul").textContent = mul === null ? "—" : "×" + mul.toFixed(1);
+  $("evnote").textContent = `컴백일 ${a.peak_date} 기준. 진입 국가가 ${a.pre_c}개국에서 ${a.post_c}개국으로 ${a.post_c>=a.pre_c?"늘었":"줄었"}습니다. 배수가 클수록 발주를 컴백에 맞춰 몰아야 하는 아티스트입니다.`;
+
+  $("foot").innerHTML = `데이터 생성 ${DATA.generated} · 원천 ${fmt(DATA.raw_rows)}행 → 팩트 ${fmt(DATA.fact_rows)}행 · ${DATA.countries}개국 · 대상 아티스트 ${list.length}팀<br>권역 가중치 기본값 출처: 번개장터 2025 글로벌 K-pop 리포트 (지역별 실거래 비중) · 차트 데이터 출처: Kaggle spotify-charts-daily-updated, CC BY-SA 4.0`;
+}
+
+function drawMap(out){
+  if (mapDead) return;
+  const vals = {}, hi = out.length ? Math.max(...out.map(x=>x.share)) : 1;
+  out.forEach(x => { if(!x.guard) vals[x.c.toUpperCase()] = +x.share.toFixed(3); });
+  const lo = cssv("--accent-soft") || "#fbe4ed", acc = cssv("--accent") || "#c2185b";
+  $("ramp").style.background = `linear-gradient(90deg, ${lo}, ${acc})`;
+  $("ramphi").textContent = hi.toFixed(1) + "%";
+  const manual = out.filter(x=>x.guard).length;
+  $("mapnote").textContent = manual ? `· 회색 ${manual}개국은 표본 부족으로 수동 배분` : "";
+  try {
+    if (!MAP) {
+      if (typeof jsVectorMap === "undefined") throw new Error("library unavailable");
+      MAP = new jsVectorMap({
+        selector: "#map", map: "world", zoomButtons: true, zoomOnScroll: false,
+        backgroundColor: "transparent",
+        regionStyle: { initial: { fill: cssv("--line") || "#ddd", stroke: cssv("--panel"), strokeWidth: .4 } },
+        series: { regions: [{ attribute: "fill", scale: [lo, acc], normalizeFunction: "polynomial", values: {} }] },
+        onRegionTooltipShow(e, tip, code){
+          const v = vals[code];
+          tip.text((CN[code.toLowerCase()] || code) + (v == null ? " · 배분 없음" : ` · ${v}%`));
+        }
+      });
+    }
+    MAP.series.regions[0].setValues({});
+    MAP.series.regions[0].setValues(vals);
+  } catch (err) {
+    mapDead = true;
+    $("map").innerHTML = '<div class="mapfail">지도 라이브러리를 불러오지 못했습니다. 아래 표와 침투도 막대로 같은 내용을 볼 수 있습니다.</div>';
+  }
+}
+
+["total","inckr","members"].forEach(id => $(id).addEventListener("input", render));
+$("artist").addEventListener("change", ()=>{
+  $("members").value = MEMBERS[A[$("artist").value].name] || 1;
+  render();
+});
+$("copy").addEventListener("click", async e => {
+  e.stopPropagation();
+  const btn = $("copy");
+  try { await navigator.clipboard.writeText(TSV); btn.textContent = "복사됨"; }
+  catch { btn.textContent = "복사 실패 — 표를 직접 선택하세요"; }
+  setTimeout(()=>{ btn.textContent = "표 복사"; }, 2200);
+});
+$("weights").addEventListener("input", render);
+$("reset").addEventListener("click", ()=>{ Object.keys(DEF).forEach(r=>$("w_"+r).value = DEF[r]); render(); });
+$("members").value = MEMBERS[A[$("artist").value].name] || 1;
+render();
+</script>

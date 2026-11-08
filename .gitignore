@@ -1,0 +1,16 @@
+# 중간 산출물 — 크고 재현 가능하므로 추적하지 않음 (docs/PIPELINE.md 참고)
+*.db
+*.gz
+gz/
+fact_artist_country_daily.csv
+kpop_all.csv
+kpop_albums_raw.csv
+alb2.csv
+f[0-9].csv
+charts_*.csv
+
+node_modules/
+__pycache__/
+.DS_Store
+Thumbs.db
+*.png
