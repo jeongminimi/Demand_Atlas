@@ -1,7 +1,9 @@
 # data/
 
-이 디렉터리의 파일은 [Spotify Charts (Kaggle)](https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated)
-(CC BY-SA 4.0)를 가공한 **파생물**이므로 동일하게 **CC BY-SA 4.0**을 따릅니다.
+이 디렉터리의 파일은 아래 데이터셋을 가공한 **파생물**이므로 동일하게 **CC BY-SA 4.0**을 따릅니다.
+
+> **Spotify Charts (daily updated)** — Gonzalo Lopez Gil, Kaggle, CC BY-SA 4.0
+> <https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated>
 
 | 파일 | 내용 |
 |---|---|

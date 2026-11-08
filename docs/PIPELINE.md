@@ -6,7 +6,10 @@ gzip 청크 628MB)은 저장소에 넣지 않았습니다. 아래 절차로 재�
 
 ## 0. 원천
 
-[Kaggle · gonzalopezgil/spotify-charts-daily-updated](https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated) (CC BY-SA 4.0, 매일 갱신)
+**Spotify Charts (daily updated)** — Gonzalo Lopez Gil, Kaggle, CC BY-SA 4.0
+<https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated>
+
+매일 갱신되는 데이터셋이라, 다시 받으면 아래 수치와 달라집니다.
 
 | 파일 | 크기 | 행 | 주요 컬럼 |
 |---|---|---|---|
