@@ -181,3 +181,11 @@ node test/qa_map.js         # 지도 렌더 3개 경로(정상 / 폴백 / 실패
 - 지도 — [jsvectormap](https://github.com/themustafaomar/jsvectormap) 1.5.3 (MIT), CDN 로드
 
 아티스트명·소속사명은 모두 원천 데이터에 기록된 값이며, 어떤 회사와도 제휴 관계가 없습니다.
+
+---
+
+## 포트폴리오 작업 인수인계
+
+취업 포트폴리오의 목적, 확정된 근거, 미확인 항목과 다음 작업 지침은
+[`PORTFOLIO_BRIEF.md`](PORTFOLIO_BRIEF.md)에 정리했습니다.
+발표형 HTML 초안은 [`portfolio/demand-atlas-portfolio.html`](portfolio/demand-atlas-portfolio.html)입니다.
